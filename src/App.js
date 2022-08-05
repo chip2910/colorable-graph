@@ -3,6 +3,9 @@ import { useState } from 'react';
 
 const isConnected = (nodes) => {
   const graphNodeKeys = Object.keys(nodes);
+  if (!graphNodeKeys.length) {
+    return;
+  }
   const keyStart = graphNodeKeys[0];
   let visited = new Set();
   path(keyStart, nodes, visited);
@@ -20,6 +23,9 @@ const path = (nodeKey, nodes, visited) => {
 
 
 const isColorable = (nodes) => {
+  if (!Object.keys(nodes).length) {
+    return;
+  }
   const nodesColor = {};
   const red = 0;
   const blue = 1;
@@ -83,7 +89,6 @@ function App() {
       }
     }
 
-    console.log(nodes);
     setGraphNodes(nodes);
     setIsGraphColorable(isColorable(nodes));
     setIsGraphConnected(isConnected(nodes));
