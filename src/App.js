@@ -1,66 +1,62 @@
 import './App.css';
 import { useState } from 'react';
 
-const isConnected = (nodes) => {
-  const graphNodeKeys = Object.keys(nodes);
-  if (!graphNodeKeys.length) {
-    return;
-  }
-  const keyStart = graphNodeKeys[0];
-  let visited = new Set();
-  path(keyStart, nodes, visited);
-  return visited.size === graphNodeKeys.length;
-}
-
-const path = (nodeKey, nodes, visited) => {
+const path = (nodeKey, graphNodes, visited) => {
   visited.add(nodeKey);
-  for (let i = 0; i <  nodes[nodeKey].directPaths.length; i++) {
-    if (!visited.has(nodes[nodeKey].directPaths[i])) {
-      path(nodes[nodeKey].directPaths[i], nodes, visited);
+  for (const v of graphNodes[nodeKey].directPaths.values()) {  
+    if (!visited.has(v)) {
+      path(v, graphNodes, visited);
     }
   }
 }
-
-
-const isColorable = (nodes) => {
-  if (!Object.keys(nodes).length) {
-    return;
-  }
-  const nodesColor = {};
-  const red = 0;
-  const blue = 1;
-  for (const a in nodes) {
-    const node = nodes[a];
-    let takenColors = new Set();
-    for (let i=0; i < node.directPaths.length; i++) {
-      if (nodesColor[node.directPaths[i]] !== undefined ) {
-        takenColors.add(nodesColor[node.directPaths[i]]);
-      } 
-    }
-    if (!takenColors.has(red)) {
-      nodesColor[a] = red;
-    } else if(!takenColors.has(blue)) {
-      nodesColor[a] = blue;
-    } else {
-      return false;
-    }
-  }
-  return true;
-};
-
 
 function App() {
   const [graphSentence, setGraphSentence] = useState();
   const [graphNodes, setGraphNodes] = useState({});
-  const [isGraphColorable, setIsGraphColorable] = useState();
-  const [isGraphConnected, setIsGraphConnected] = useState();
 
   const handleClear = () => {
     setGraphNodes({});
     setGraphSentence('');
   }
 
-  const handleClick = () => {
+  const isConnected = () => {
+    const graphNodeKeys = Object.keys(graphNodes);
+    if (!graphNodeKeys.length) {
+      return;
+    }
+    const keyStart = graphNodeKeys[0];
+    let visited = new Set();
+    path(keyStart, graphNodes, visited);
+    return visited.size === graphNodeKeys.length;
+  }
+  
+  const isColorable = () => {
+    if (!Object.keys(graphNodes).length) {
+      return;
+    }
+    const nodesColor = {};
+    const red = 0;
+    const blue = 1;
+    for (const a in graphNodes) {
+      const node = graphNodes[a];
+      let takenColors = new Set();
+      for (const v of node.directPaths.values()) {   
+        if (nodesColor[v] !== undefined ) {
+          takenColors.add(nodesColor[v]);
+        } 
+      }
+      if (!takenColors.has(red)) {
+        nodesColor[a] = red;
+      } else if(!takenColors.has(blue)) {
+        nodesColor[a] = blue;
+      } else {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleAnalyze = () => {
     if (!graphSentence) {
       return;
     }
@@ -77,21 +73,19 @@ function App() {
         }
         if (!nodes[pathNodes[j]]) {
           nodes[pathNodes[j]] = {
-            directPaths: [],
+            directPaths: new Set(),
           }
         }
         if (j > 0) {
-          nodes[pathNodes[j]].directPaths.push(pathNodes[j-1]);
+          nodes[pathNodes[j]].directPaths.add(pathNodes[j-1]);
           if (pathNodes[j] !== pathNodes[j-1]) {
-            nodes[pathNodes[j-1]].directPaths.push(pathNodes[j]);
+            nodes[pathNodes[j-1]].directPaths.add(pathNodes[j]);
           }
         }
       }
     }
 
     setGraphNodes(nodes);
-    setIsGraphColorable(isColorable(nodes));
-    setIsGraphConnected(isConnected(nodes));
   }
 
   const handleSentenceChange = (event) => {
@@ -99,8 +93,9 @@ function App() {
   };
 
   const nodeList = Object.keys(graphNodes).map((key) => {
+    const links = Array.from(graphNodes[key].directPaths);
     return (
-      <li key={key}><span className='infoRed'>{key}</span>: {graphNodes[key].directPaths.join(', ')}</li>    
+      <li key={key}><span className='infoRed'>{key}</span>: {links.join(', ')}</li>    
     );
   });
 
@@ -114,10 +109,10 @@ function App() {
         value={graphSentence}
       />
       <div>
-        <button id='analize'
-          onClick={handleClick}
+        <button id='analyze'
+          onClick={handleAnalyze}
         >
-          Analize
+          Analyze
         </button>
         <button id='clear'
           onClick={handleClear}
@@ -134,10 +129,10 @@ function App() {
             </ul> 
           </div>
           <div>
-            <h3>This graph is: <span className='infoRed'>{isGraphConnected ? 'connected' : 'not connected'}</span></h3>
+            <h3>This graph is: <span className='infoRed'>{isConnected() ? 'connected' : 'not connected'}</span></h3>
           </div>
           <div>
-            <h3>This graph is: <span className='infoRed'>{isGraphColorable ? 'red, blue colorable' : 'not colorable with red and blue colors'}</span></h3>
+            <h3>This graph is: <span className='infoRed'>{isColorable() ? 'red, blue colorable' : 'not colorable with red and blue colors'}</span></h3>
           </div>
         </div>
       )}
