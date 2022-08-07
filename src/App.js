@@ -10,51 +10,54 @@ const path = (nodeKey, graphNodes, visited) => {
   }
 }
 
+const isConnected = (graphNodes) => {
+  const graphNodeKeys = Object.keys(graphNodes);
+  if (!graphNodeKeys.length) {
+    return false;
+  }
+  const keyStart = graphNodeKeys[0];
+  let visited = new Set();
+  path(keyStart, graphNodes, visited);
+  return visited.size === graphNodeKeys.length;
+}
+
+const isColorable = (graphNodes) => {
+  if (!Object.keys(graphNodes).length) {
+    return false;
+  }
+  const nodesColor = {};
+  const red = 0;
+  const blue = 1;
+  for (const a in graphNodes) {
+    const node = graphNodes[a];
+    let takenColors = new Set();
+    for (const v of node.directPaths.values()) {   
+      if (nodesColor[v] !== undefined ) {
+        takenColors.add(nodesColor[v]);
+      } 
+    }
+    if (!takenColors.has(red)) {
+      nodesColor[a] = red;
+    } else if(!takenColors.has(blue)) {
+      nodesColor[a] = blue;
+    } else {
+      return false;
+    }
+  }
+  return true;
+};
+
+
+
 function App() {
   const [graphSentence, setGraphSentence] = useState();
   const [graphNodes, setGraphNodes] = useState({});
+  const [graphIsColorable, setGraphIsColorable] = useState(false);
 
   const handleClear = () => {
     setGraphNodes({});
     setGraphSentence('');
   }
-
-  const isConnected = () => {
-    const graphNodeKeys = Object.keys(graphNodes);
-    if (!graphNodeKeys.length) {
-      return;
-    }
-    const keyStart = graphNodeKeys[0];
-    let visited = new Set();
-    path(keyStart, graphNodes, visited);
-    return visited.size === graphNodeKeys.length;
-  }
-  
-  const isColorable = () => {
-    if (!Object.keys(graphNodes).length) {
-      return;
-    }
-    const nodesColor = {};
-    const red = 0;
-    const blue = 1;
-    for (const a in graphNodes) {
-      const node = graphNodes[a];
-      let takenColors = new Set();
-      for (const v of node.directPaths.values()) {   
-        if (nodesColor[v] !== undefined ) {
-          takenColors.add(nodesColor[v]);
-        } 
-      }
-      if (!takenColors.has(red)) {
-        nodesColor[a] = red;
-      } else if(!takenColors.has(blue)) {
-        nodesColor[a] = blue;
-      } else {
-        return false;
-      }
-    }
-    return true;
-  };
 
   const handleAnalyze = () => {
     if (!graphSentence) {
@@ -86,6 +89,12 @@ function App() {
     }
 
     setGraphNodes(nodes);
+
+    if (isConnected(nodes)) {
+      setGraphIsColorable(isColorable(nodes));
+    } else {
+      setGraphIsColorable(false);
+    }
   }
 
   const handleSentenceChange = (event) => {
@@ -129,10 +138,10 @@ function App() {
             </ul> 
           </div>
           <div>
-            <h3>This graph is: <span className='infoRed'>{isConnected() ? 'connected' : 'not connected'}</span></h3>
+            <h3>This graph is: <span className='infoRed'>{isConnected(graphNodes) ? 'connected' : 'not connected'}</span></h3>
           </div>
           <div>
-            <h3>This graph is: <span className='infoRed'>{isColorable() ? 'red, blue colorable' : 'not colorable with red and blue colors'}</span></h3>
+            <h3>This graph is: <span className='infoRed'>{graphIsColorable ? 'red, blue colorable' : 'not colorable with red and blue colors'}</span></h3>
           </div>
         </div>
       )}
